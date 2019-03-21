@@ -130,6 +130,37 @@ struct paramset SetC = {
 	      0x2a,0x1e,0xa0,0x77,0x2b,0x59,0x99,0x6b,0xe1,0xf5,0xb1,0x1f,0x9d,0xf7,0x9a,0x46}
 };
 
+//попробую все операции сделать по модулю
+
+uint8_t* Add_512(uint8_t* a, uint8_t* b){
+	uint8_t result[64];
+	uint8_t sum = 0;
+	for(int i = 0; i < 64; i++){
+		sum = (sum >> 8) + a[i] + b[i];
+		result[i] = sum & 0xff;
+	}
+	return result;
+}
+
+uint8_t* Sub_512(uint8_t* a, uint8_t* b){// из a вычитается b
+	uint8_t result[64];
+	
+	for(int i=0; i<64; i++){
+		
+	}
+
+
+}
+
+uint8_t* Mul_512(uint8_t* a, uint8_t* b){
+	uint8_t result[64];
+}
+
+uint8_t* Rec_512(uint8_t* a){
+	uint8_t result[64];
+}
+
+
 
 
 
