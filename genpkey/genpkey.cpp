@@ -1,66 +1,20 @@
 #include "rand.h"
 #include "param.h"
 
-bool Z_256_iszero(uint8_t* t){
-	for(int i = 0; i < 32; i++){
-		if(t[i] != 0x00){
-			return false;
-		}
-	}
-	return true;
-}
+BigInt gen_priv_key(struct paramset *pset, int size){
+	vector<uint8_t> t(size);
 
-bool Z_512_iszero(uint8_t* t){
-	for(int i = 0; i < 64; i++){
-		if(t[i] != 0x00){
-			return false;
-		}
-	}
-	return true;
-}
-
-bool Z_256_l(uint8_t* t, vector<uint8_t>  q){
-	for(int i = 31; i >= 0; i--){
-		if(t[i]>q[i]){
-			return false;
-		}
-		if(t[i]<q[i]){
-			return true;
-		}
-	}
-	return false;
-}
-
-bool Z_512_l(uint8_t* t, vector<uint8_t>  q){
-	for(int i = 63; i >= 0; i--){
-		if(t[i]>q[i]){
-			return false;
-		}
-		if(t[i]<q[i]){
-			return true;
-		}
-	}
-	return false;
-}
-
-void gen_priv_key_256(uint8_t *dd, struct paramset *pset){
-	uint8_t t[32]; 
+	BigInt zero = vector<uint8_t> {0x00};
+	BigInt d;
 
 	do{
-	 	rand_bytes(t, sizeof (t));
-	}while(Z_256_iszero(t) || !Z_256_l(t, pset-> q.val()));
+		rand_bytes(&t[0], size);
+		d =(BigInt) t;
+	}while(d == zero || d >= pset->q);
 
-	memcpy(dd, t, 32);
+	return d;
+
 }
-
-void gen_priv_key_512(uint8_t *dd, struct paramset *pset){
-	uint8_t t[64]; 
-	do{
-		rand_bytes(t, sizeof (t));
-	}while(Z_512_iszero(t) || !Z_256_l(t, pset-> q.val()));
-	memcpy(dd, t, 64);
-}
-
 
 enum ERRORS{CANNOT_OPEN_OUTPUT_FILE,
 			NO_OUTPUT_FILE,
@@ -85,8 +39,6 @@ void Handle_state(int argc, char** argv, map <string,string> &state){
 	}	
 }
 
-
-
 int main(int argc, char** argv){
 	try{
 		map <string,string> state = { {"pset", "SetC"},
@@ -100,18 +52,15 @@ int main(int argc, char** argv){
 			throw CANNOT_OPEN_OUTPUT_FILE;
 		}
 
-		vector<uint8_t> dd;
+		BigInt d;
 
 		if(state["pset"] == "SetA"){
-			BigInt d(32);
-			dd = d.val();
-		 	gen_priv_key_256(&dd[0], &SetA);
+			d = gen_priv_key(&SetA, 32);
 		} else {
-			BigInt d(64);
-		 	dd = d.val();
-		 	gen_priv_key_512(&dd[0], &SetC);
+			d = gen_priv_key(&SetC, 64);
 		}
 
+		vector<uint8_t> dd = d.val();
 		reverse(dd.begin(),dd.end()); // теперь в dd[0] старший байт
 
 		fwrite(&dd[0],1,dd.size(), output_file);

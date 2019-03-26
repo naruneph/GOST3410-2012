@@ -1,7 +1,7 @@
 #include "param.h"
 
 
-void get_pub_key(uint8_t *Q, uint8_t *d, struct paramset *pset){}
+//void get_pub_key(uint8_t *Q, uint8_t *d, struct paramset *pset){}
 
 
 
@@ -74,7 +74,7 @@ int main(int argc, char** argv){
 			throw WRONG_KEY_SIZE;
 		}
 
-		vector<uint8_t> d[sz];
+//		vector<uint8_t> d[sz];
 
 		fread(&d[0],1,sz,private_key);
 
