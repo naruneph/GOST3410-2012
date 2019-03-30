@@ -1,8 +1,13 @@
 #include "param.h"
+#include "point.h"
 
 
-//void get_pub_key(uint8_t *Q, uint8_t *d, struct paramset *pset){}
 
+
+BigInt get_pub_key(BigInt & d, struct paramset *pset){
+
+
+}
 
 
 
@@ -74,13 +79,28 @@ int main(int argc, char** argv){
 			throw WRONG_KEY_SIZE;
 		}
 
-//		vector<uint8_t> d[sz];
+		vector<uint8_t> dd[sz];
 
-		fread(&d[0],1,sz,private_key);
+		fread(&dd[0],1,sz,private_key);
 
-		reverse(d.begin(),d.end());//теперь в d[0] младший байт
+		reverse(dd.begin(),dd.end());//теперь в d[0] младший байт
 
-		// Q = dP   P(u,v) - все в координатах Эдвардса
+		BigInt d = dd;
+
+		// Q = dP   P(u,v) - все в координатах Эдвардса т.e. надо d раз сложить P
+
+		Point Q;
+
+		if(state["pset"] == "SetA"){
+			Q = get_pub_key(d, &SetA);
+		} else {
+			q = get_pub_key(d, &SetC);
+		}
+
+
+
+
+
 
 
 
