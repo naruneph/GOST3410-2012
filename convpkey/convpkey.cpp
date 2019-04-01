@@ -1,16 +1,10 @@
 #include "param.h"
 #include "point.h"
 
-
-
-
-BigInt get_pub_key(BigInt & d, struct paramset *pset){
-
-
+point get_pub_key(BigInt & d, struct paramset *pset){
+	point P(pset->u, pset->v, pset);
+	return P * d;
 }
-
-
-
 
 enum ERRORS{CANNOT_OPEN_OUTPUT_FILE,
 			NO_PRIVATE_KEY,
@@ -79,7 +73,7 @@ int main(int argc, char** argv){
 			throw WRONG_KEY_SIZE;
 		}
 
-		vector<uint8_t> dd[sz];
+		vector<uint8_t> dd(sz);
 
 		fread(&dd[0],1,sz,private_key);
 
@@ -89,31 +83,24 @@ int main(int argc, char** argv){
 
 		// Q = dP   P(u,v) - все в координатах Эдвардса т.e. надо d раз сложить P
 
-		Point Q;
+		point Q;
 
 		if(state["pset"] == "SetA"){
-			Q = get_pub_key(d, &SetA);
+			Q = get_pub_key(d, & SetA);
 		} else {
-			q = get_pub_key(d, &SetC);
+			Q = get_pub_key(d, & SetC);
 		}
 
+		vector<uint8_t> q_first = Q.first.val();
+		vector<uint8_t> q_second = Q.second.val();
+
+		reverse(q_first.begin(), q_first.end()); // теперь в [0] старший байт
+		reverse(q_second.begin(), q_second.end()); // теперь в [0] старший байт
 
 
+		fwrite(&q_first[0],1,q_first.size(), output_file);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		fwrite(&q_second[0],1,q_second.size(), output_file);		
 
 
 

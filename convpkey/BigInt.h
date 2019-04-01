@@ -35,11 +35,13 @@ class BigInt{
 		BigInt operator+(const BigInt &) const;
 		BigInt operator-(const BigInt &) const;
 		BigInt operator*(const BigInt &) const;
-		BigInt operator/(const BigInt &) const;
-		BigInt operator%(const BigInt &) const;
+		vector<BigInt> operator/(const BigInt &) const;
+//		BigInt operator%(const BigInt &) const;
 
 		BigInt gcd(BigInt, BigInt, BigInt &, BigInt &);
 		BigInt inv_mod(BigInt &);
+
+		void shift_r();
 };
 
 void BigInt::remove_leading_zeroes(){
@@ -220,39 +222,98 @@ BigInt BigInt::operator*(const BigInt &num) const{
 }
 
 
-BigInt BigInt::operator/(const BigInt &num) const{// деление на ноль??? a/b
-	BigInt a(*this), b(num);
-	a.remove_leading_zeroes();
-	b.remove_leading_zeroes();
-	a.positive = true;
+// BigInt BigInt::operator/(const BigInt &num) const{// деление на ноль??? a/b
+// 	BigInt a(*this), b(num);
+// 	a.remove_leading_zeroes();
+// 	b.remove_leading_zeroes();
+// 	a.positive = true;
+// 	b.positive = true;
+
+// 	BigInt zero = vector<uint8_t> {0x00};
+// 	BigInt one = vector<uint8_t> {0x01};
+
+// 	BigInt count = zero;
+
+// 	while( a >= b){
+// 		a -= b;
+// 		count += one;
+// 	}
+
+// 	count.positive = (this->positive == num.positive);
+// 	count.remove_leading_zeroes(); // чтобы 0 был положительным
+// 	return count;
+// }
+
+void BigInt::shift_r(){
+	if(this->value.size() == 0){
+		this->value.push_back(0x00);
+		
+		return;
+	}
+	this->value.push_back(this->value[this->value.size() - 1]);
+	for(int i = this->value.size() - 2; i > 0; i--){
+		this->value[i] = this->value[i-1];
+	}
+	this->value[0] = 0x00;
+}
+
+vector<BigInt> BigInt::operator/(const BigInt &num) const{
+ 	BigInt a(*this), b(num);
+ 	a.remove_leading_zeroes();
+ 	b.remove_leading_zeroes();
+ 	a.positive = true;
 	b.positive = true;
 
-	BigInt zero = vector<uint8_t> {0x00};
-	BigInt one = vector<uint8_t> {0x01};
+	//проверить на деление на ноль
 
-	BigInt count = zero;
+	BigInt res(a.value.size());
+	BigInt cur;
+	for(int i = a.value.size() - 1; i >= 0; i--){
+		cur.shift_r();
+		cur.value[0] = a.value[i];
+		// подбираем максимальное число x, такое что b * x <= cur
+		uint16_t x = 0x00, l = 0x00, r = 0x100;
+		while(l <= r){
+			uint8_t mm = (l + r) >> 1;    
+			BigInt m = vector<uint8_t> {mm};
+			BigInt t = b * m;
+			if(t <= cur){
+				x = mm;  
+				l = mm + 0x01;
+			} else {
+				r = mm - 0x01;
+			}
+		}
+		res.value[i] = (uint8_t) x; 
+		cur = cur - b * (BigInt) vector<uint8_t> {(uint8_t) x}; 
+	}// есть подозрение что cur это a % b  и похоже это реально так
 
-	while( a >= b){
-		a -= b;
-		count += one;
-	}
+	// vector<uint8_t> aa = cur.val();
+	// for(int i=aa.size() -1; i >=0 ; i--){
+	// 	printf("%02x", aa[i]);
+	// }
 
-	count.positive = (this->positive == num.positive);
-	count.remove_leading_zeroes(); // чтобы 0 был положительным
-	return count;
+	// cout<<endl;
+	// cout<< cur.sgn();
+
+	res.positive = (this->positive == num.positive);
+	res.remove_leading_zeroes();
+	//return res;
+	return vector<BigInt> {res,cur};
 }
 
-BigInt BigInt::operator%(const BigInt &num) const{
-	BigInt a(*this), b(num);
-	a.remove_leading_zeroes();
-	b.remove_leading_zeroes();
 
-	BigInt res = a - (a/b) * b;
-	if(!res.positive){
-		res += b;
-	}
-	return res;
-}
+//BigInt BigInt::operator%(const BigInt &num) const{
+	// BigInt a(*this), b(num);
+	// a.remove_leading_zeroes();
+	// b.remove_leading_zeroes();
+
+	// BigInt res = a - (a/b) * b;
+	// if(!res.positive){
+	// 	res += b;
+	// }
+	// return res;
+//}
 
 BigInt BigInt::gcd(BigInt a, BigInt b, BigInt &x, BigInt &y){
 	BigInt zero = vector<uint8_t> {0x00};
@@ -264,8 +325,9 @@ BigInt BigInt::gcd(BigInt a, BigInt b, BigInt &x, BigInt &y){
 		return b;
 	}
 	BigInt x1, y1;
-	BigInt d = gcd(b % a, a, x1, y1);
-	x = y1 - (b/a) * x1;
+	vector<BigInt> q = b / a;
+	BigInt d = gcd(q[1], a, x1, y1);
+	x = y1 - (q[0]) * x1;
 	y = x1;
 	return d;
 }
@@ -277,6 +339,7 @@ BigInt BigInt::inv_mod(BigInt & num){
 	if (g != one){
 		throw (string) "CANNOT_GET_INVERSE_ELEMENT";
 	}
-	x = (x % num + num) % num;
+//	x = (x % num + num) % num;
+	x = (x / num)[1];
 	return x;
 }

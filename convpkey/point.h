@@ -25,14 +25,16 @@ bool point::IsBitSet(uint8_t num, int bit) const{
 point point::operator+=(const point & a){
 	BigInt one =  vector<uint8_t> {0x01};
 
-	BigInt du1u2v1v2 = (pset->d * first * a.first * second * a.second);
+	BigInt u1u2 = first * a.first;
+	BigInt v1v2 = second * a.second;
 
+	BigInt du1u2v1v2 = (pset->d * u1u2 * v1v2);
 
 	BigInt u1v2_plus_u2v1 = (first * a.second + second * a.first);
-	BigInt v1v2_minus_eu1u1 = (second * a.second - pset->e * first * a.first);
+	BigInt v1v2_minus_eu1u1 = (v1v2 - pset->e * u1u2);
 
-	this->first = ((u1v2_plus_u2v1) * (one + du1u2v1v2).inv_mod(pset->p)) % (pset->p);
-	this->second = ((v1v2_minus_eu1u1) * (one - du1u2v1v2).inv_mod(pset->p)) % (pset->p);
+	this->first = (((u1v2_plus_u2v1) * (one + du1u2v1v2).inv_mod(pset->p)) / (pset->p))[1];
+	this->second = (((v1v2_minus_eu1u1) * (one - du1u2v1v2).inv_mod(pset->p)) / (pset->p))[1];
 
 
 	return(*this);
