@@ -84,7 +84,6 @@ int main(int argc, char** argv){
 		// Q = dP   P(u,v) - все в координатах Эдвардса т.e. надо d раз сложить P
 
 		point Q;
-
 		if(state["pset"] == "SetA"){
 			Q = get_pub_key(d, & SetA);
 		} else {
@@ -101,10 +100,6 @@ int main(int argc, char** argv){
 		fwrite(&q_first[0],1,q_first.size(), output_file);
 
 		fwrite(&q_second[0],1,q_second.size(), output_file);		
-
-
-
-
 
 		
 		fclose(output_file);

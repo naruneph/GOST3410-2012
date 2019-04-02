@@ -214,30 +214,55 @@ void BigInt::inc(){
 	}
 }
 
+// BigInt BigInt::operator*(const BigInt &num) const{
+// 	BigInt a(*this), b(num);
+// 	a.remove_leading_zeroes();
+// 	b.remove_leading_zeroes();
+// 	a.positive = true;
+// 	b.positive = true;
+// 	BigInt result;
+// 	result.positive = (this->positive == num.positive);
+// 	bool init = true;
+// 	for(int i = 0; i < b.size(); i++){
+// 		uint8_t bb = b.value[i];
+// 		for(int j = 0; j < 8; j++){
+// 			if(!init){
+// 				a.inc();
+// 			} 
+// 			if (i == 0 && j == 0){
+// 				init = false;
+// 			}
+
+// 			if(IsBitSet(bb, j)){
+// 				result += a;
+// 			}
+// 		}
+// 	}
+// 	return result;
+// }
+
 BigInt BigInt::operator*(const BigInt &num) const{
 	BigInt a(*this), b(num);
 	a.remove_leading_zeroes();
 	b.remove_leading_zeroes();
-	a.positive = true;
-	b.positive = true;
-	BigInt result;
-	result.positive = (this->positive == num.positive);
-	bool init = true;
-	for(int i = 0; i < b.size(); i++){
-		for(int j = 0; j < 8; j++){
-			if(!init){
-				a.inc();
-			} 
-			if (i == 0 && j == 0){
-				init = false;
-			}
-			uint8_t bb = b.value[i];
-			if(IsBitSet(bb, j)){
-				result += a;
-			}
+
+	BigInt res;
+	for(unsigned int i = 0; i < a.value.size() + b.value.size(); i++){
+		res.value.push_back(0x00);
+	}
+ 	res.positive = (a.positive == b.positive);
+
+	for(unsigned int i = 0; i < a.value.size(); i++){
+		uint8_t carry = 0;
+
+		for(unsigned int j = 0; j < b.value.size() || carry != 0x00; j++){
+			uint16_t tmp = res.value[i+j] + a.value[i] *(j < b.value.size() ?  b.value[j] : 0x00) + carry;
+			res.value[i+j] = tmp & 0xff;
+			carry = (tmp >> 8);
 		}
 	}
-	return result;
+	res.remove_leading_zeroes();
+	return res;
 }
 
 void set_least_bit(uint8_t & r, uint8_t a, int j){//вспомогательная функция
@@ -317,10 +342,10 @@ BigInt BigInt::gcd(BigInt &a, BigInt &b, BigInt &x, BigInt &y){
 		return b;
 	}
 	BigInt x1, y1;
+
 	vector<BigInt> q = b / a;
 	BigInt d = gcd(q[1], a, x1, y1);
 	x = y1 - (q[0]) * x1;
-
 	y = x1;
 	return d;
 }
@@ -332,7 +357,6 @@ BigInt BigInt::inv_mod(BigInt & num){
 	if (g != one){
 		throw (string) "CANNOT_GET_INVERSE_ELEMENT";
 	}
-
 	x = (((x/num)[1] + num)/ num)[1];
 	return x;
 }
