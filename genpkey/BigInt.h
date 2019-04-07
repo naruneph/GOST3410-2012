@@ -14,6 +14,12 @@ class BigInt{
     	vector<uint8_t> val() const {return value;}
     	bool sgn() const {return positive;}
 
+    	void fix_size(uint8_t size){
+    		while(value.size() < size){
+    			value.push_back(0x00);
+    		}
+    	}
+
 		void remove_leading_zeroes();
 
 		BigInt & operator =(const BigInt &);
