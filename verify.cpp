@@ -45,9 +45,6 @@ void Handle_state(int argc, char** argv, map <string,string> &state){
 	if(state["data_file"] == ""){
 		throw NO_DATA_FILE;
 	}
-	if(state["crt_file"] == ""){
-		throw NO_CRT_FILE;
-	}
 }
 
 uint64_t file_size(FILE *f){ 
@@ -112,7 +109,7 @@ int main(int argc, char** argv){
 		map <string,string> state = { {"pset", "SetC"},
 									  {"public_key", ""},
 									  {"data_file", ""},
-									  {"crt_file", ""}
+									  {"crt_file", "file.crt"}
 									};
 
 		Handle_state(argc, argv, state);
