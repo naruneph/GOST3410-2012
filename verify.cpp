@@ -2,7 +2,30 @@
 #include "rand.h"
 #include "point.h" //содержит BigInt param headers
 
-point Edwards_to_Weierstrass(point &CC, struct paramset *pset){
+// point Edwards_to_Weierstrass(point &CC, struct paramset *pset){
+// 	BigInt one = (BigInt) vector<uint8_t> {0x01};
+// 	BigInt four = (BigInt) vector<uint8_t> {0x04};
+// 	BigInt six = (BigInt) vector<uint8_t> {0x06};
+// 	BigInt inv_four = four.inv_mod(pset->p);
+// 	BigInt inv_six = six.inv_mod(pset->p);
+
+// 	BigInt S_tmp = ((pset->e + (pset->p - pset->d))/pset->p)[1];
+// 	BigInt S = ((S_tmp * inv_four)/pset->p)[1];
+
+// 	BigInt T_tmp = ((pset->e + pset->d)/pset->p)[1];
+// 	BigInt T = ((T_tmp * inv_six)/pset->p)[1];
+
+// 	BigInt top = ((S * (((one + CC.second) / (pset->p))[1])  ) / (pset->p))[1];
+// 	BigInt bottom = ((one + ((pset->p - CC.second) / (pset->p))[1] ) / (pset->p))[1];
+
+//     BigInt X = (((  ((top * bottom.inv_mod(pset->p)) / (pset->p))[1]   ) + T)  / (pset->p))[1];
+//     BigInt bottom2 = ((bottom * CC.first)  / (pset->p))[1];
+// 	BigInt Y = ((top * bottom2.inv_mod(pset->p))  / (pset->p))[1];
+
+// 	return point(X,Y, pset);
+// }
+
+point Edwards_to_Weierstrass(point CC, struct paramset *pset){
 	BigInt one = (BigInt) vector<uint8_t> {0x01};
 	BigInt four = (BigInt) vector<uint8_t> {0x04};
 	BigInt six = (BigInt) vector<uint8_t> {0x06};
@@ -15,12 +38,12 @@ point Edwards_to_Weierstrass(point &CC, struct paramset *pset){
 	BigInt T_tmp = ((pset->e + pset->d)/pset->p)[1];
 	BigInt T = ((T_tmp * inv_six)/pset->p)[1];
 
-	BigInt top = ((S * (((one + CC.second) / (pset->p))[1])  ) / (pset->p))[1];
-	BigInt bottom = ((one + ((pset->p - CC.second) / (pset->p))[1] ) / (pset->p))[1];
+	BigInt numerator = ((S * (((one + CC.second) / (pset->p))[1])  ) / (pset->p))[1];
+	BigInt denominator_1 = ((one + ((pset->p - CC.second) / (pset->p))[1] ) / (pset->p))[1];
+	BigInt denominator_2 = ((denominator_1 * CC.first)  / (pset->p))[1];
 
-    BigInt X = (((  ((top * bottom.inv_mod(pset->p)) / (pset->p))[1]   ) + T)  / (pset->p))[1];
-    BigInt bottom2 = ((bottom * CC.first)  / (pset->p))[1];
-	BigInt Y = ((top * bottom2.inv_mod(pset->p))  / (pset->p))[1];
+    BigInt X = (((  ((numerator * denominator_1.inv_mod(pset->p)) / (pset->p))[1]   ) + T)  / (pset->p))[1];
+	BigInt Y = ((numerator * denominator_2.inv_mod(pset->p))  / (pset->p))[1];
 
 	return point(X,Y, pset);
 }
@@ -127,6 +150,7 @@ bool context::verify(point & Q, BigInt & r, BigInt & s, string sss){
 	return (R == r);
 }
 
+int ret;
 
 int main(int argc, char** argv){
 	try{
@@ -167,8 +191,8 @@ int main(int argc, char** argv){
 
 		//получим публичный ключ Q
 		vector<uint8_t> q_first(sz1/2), q_second(sz1/2);
-		fread(&q_first[0],1,sz1/2,public_key);
-		fread(&q_second[0],1,sz1/2,public_key);
+		ret = fread(&q_first[0],1,sz1/2,public_key);
+		ret = fread(&q_second[0],1,sz1/2,public_key);
 
 		reverse(q_first.begin(), q_first.end());
 		reverse(q_second.begin(), q_second.end());
@@ -182,8 +206,8 @@ int main(int argc, char** argv){
 
 		//получим подпись - пару r и s
 		vector<uint8_t> r(sz2/2), s(sz2/2);
-		fread(&r[0],1,sz2/2,crt_file);
-		fread(&s[0],1,sz2/2,crt_file);
+		ret = fread(&r[0],1,sz2/2,crt_file);
+		ret = fread(&s[0],1,sz2/2,crt_file);
 
 		reverse(r.begin(), r.end());
 		reverse(s.begin(), s.end());

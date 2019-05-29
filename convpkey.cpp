@@ -45,6 +45,8 @@ uint64_t file_size(FILE *f){
    return size;
 }
 
+int ret;
+
 
 int main(int argc, char** argv){
 	try{
@@ -75,7 +77,7 @@ int main(int argc, char** argv){
 
 		vector<uint8_t> dd(sz);
 
-		fread(&dd[0],1,sz,private_key);
+		ret = fread(&dd[0],1,sz,private_key);
 
 		reverse(dd.begin(),dd.end());//теперь в d[0] младший байт
 

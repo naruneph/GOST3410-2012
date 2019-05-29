@@ -16,12 +16,12 @@ point Edwards_to_Weierstrass(point CC, struct paramset *pset){
 	BigInt T_tmp = ((pset->e + pset->d)/pset->p)[1];
 	BigInt T = ((T_tmp * inv_six)/pset->p)[1];
 
-	BigInt top = ((S * (((one + CC.second) / (pset->p))[1])  ) / (pset->p))[1];
-	BigInt bottom = ((one + ((pset->p - CC.second) / (pset->p))[1] ) / (pset->p))[1];
+	BigInt numerator = ((S * (((one + CC.second) / (pset->p))[1])  ) / (pset->p))[1];
+	BigInt denominator_1 = ((one + ((pset->p - CC.second) / (pset->p))[1] ) / (pset->p))[1];
+	BigInt denominator_2 = ((denominator_1 * CC.first)  / (pset->p))[1];
 
-    BigInt X = (((  ((top * bottom.inv_mod(pset->p)) / (pset->p))[1]   ) + T)  / (pset->p))[1];
-    BigInt bottom2 = ((bottom * CC.first)  / (pset->p))[1];
-	BigInt Y = ((top * bottom2.inv_mod(pset->p))  / (pset->p))[1];
+    BigInt X = (((  ((numerator * denominator_1.inv_mod(pset->p)) / (pset->p))[1]   ) + T)  / (pset->p))[1];
+	BigInt Y = ((numerator * denominator_2.inv_mod(pset->p))  / (pset->p))[1];
 
 	return point(X,Y, pset);
 }
@@ -105,12 +105,11 @@ void context::update(uint8_t *m, int64_t size, string s){
 }
 
 void context::sign(uint8_t *sgn, BigInt &d, string sss){
-//считаем хэш от сообщения	
+	//считаем хэш от сообщения	
 	vector<uint8_t> hash(d.size());
 	(sss == "SetC") ? ctx512.finish(hash): ctx256.finish(hash);
 
-
-//теперь хэш лежит в hash, для дальнейшей работы сделаем из него BigInt
+	//теперь хэш лежит в hash, для дальнейшей работы сделаем из него BigInt
 	BigInt h = hash;
 
 	e = (h / pset->q)[1];
@@ -149,7 +148,7 @@ void context::sign(uint8_t *sgn, BigInt &d, string sss){
 }
 
 
-
+int ret;
 
 int main(int argc, char** argv){
 	try{
@@ -186,7 +185,7 @@ int main(int argc, char** argv){
 
 		//получим приватный ключ d
 		vector<uint8_t> dd(sz);
-		fread(&dd[0],1,sz,private_key);
+		ret = fread(&dd[0],1,sz,private_key);
 		reverse(dd.begin(),dd.end());//теперь в d[0] младший байт
 		BigInt d = dd;
 
