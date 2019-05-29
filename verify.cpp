@@ -2,6 +2,28 @@
 #include "rand.h"
 #include "point.h" //содержит BigInt param headers
 
+point Edwards_to_Weierstrass(point &CC, struct paramset *pset){
+	BigInt one = (BigInt) vector<uint8_t> {0x01};
+	BigInt four = (BigInt) vector<uint8_t> {0x04};
+	BigInt six = (BigInt) vector<uint8_t> {0x06};
+	BigInt inv_four = four.inv_mod(pset->p);
+	BigInt inv_six = six.inv_mod(pset->p);
+
+	BigInt S_tmp = ((pset->e + (pset->p - pset->d))/pset->p)[1];
+	BigInt S = ((S_tmp * inv_four)/pset->p)[1];
+
+	BigInt T_tmp = ((pset->e + pset->d)/pset->p)[1];
+	BigInt T = ((T_tmp * inv_six)/pset->p)[1];
+
+	BigInt top = ((S * (((one + CC.second) / (pset->p))[1])  ) / (pset->p))[1];
+	BigInt bottom = ((one + ((pset->p - CC.second) / (pset->p))[1] ) / (pset->p))[1];
+
+    BigInt X = (((  ((top * bottom.inv_mod(pset->p)) / (pset->p))[1]   ) + T)  / (pset->p))[1];
+    BigInt bottom2 = ((bottom * CC.first)  / (pset->p))[1];
+	BigInt Y = ((top * bottom2.inv_mod(pset->p))  / (pset->p))[1];
+
+	return point(X,Y, pset);
+}
 
 enum ERRORS{WRONG_FLAGS,
 
@@ -34,6 +56,7 @@ void Handle_state(int argc, char** argv, map <string,string> &state){
 			flag++;
 		} else if(flag == 1){
 			state["data_file"] = tmp;
+			state["crt_file"] = tmp + ".crt";
 			flag++;
 		} else if(flag == 2){
 			state["crt_file"] = tmp;
@@ -97,6 +120,7 @@ bool context::verify(point & Q, BigInt & r, BigInt & s, string sss){
 	BigInt z2 = ((-(r * v)) / pset->q)[1];
 
 	point CC = P * z1 + Q * z2;
+	CC = Edwards_to_Weierstrass(CC, pset);
 
 	BigInt R = (CC.first / pset->q)[1];
 
@@ -109,7 +133,7 @@ int main(int argc, char** argv){
 		map <string,string> state = { {"pset", "SetC"},
 									  {"public_key", ""},
 									  {"data_file", ""},
-									  {"crt_file", "file.crt"}
+									  {"crt_file", ""}
 									};
 
 		Handle_state(argc, argv, state);

@@ -2,6 +2,31 @@
 #include "rand.h"
 #include "point.h" //содержит BigInt param headers
 
+
+point Edwards_to_Weierstrass(point CC, struct paramset *pset){
+	BigInt one = (BigInt) vector<uint8_t> {0x01};
+	BigInt four = (BigInt) vector<uint8_t> {0x04};
+	BigInt six = (BigInt) vector<uint8_t> {0x06};
+	BigInt inv_four = four.inv_mod(pset->p);
+	BigInt inv_six = six.inv_mod(pset->p);
+
+	BigInt S_tmp = ((pset->e + (pset->p - pset->d))/pset->p)[1];
+	BigInt S = ((S_tmp * inv_four)/pset->p)[1];
+
+	BigInt T_tmp = ((pset->e + pset->d)/pset->p)[1];
+	BigInt T = ((T_tmp * inv_six)/pset->p)[1];
+
+	BigInt top = ((S * (((one + CC.second) / (pset->p))[1])  ) / (pset->p))[1];
+	BigInt bottom = ((one + ((pset->p - CC.second) / (pset->p))[1] ) / (pset->p))[1];
+
+    BigInt X = (((  ((top * bottom.inv_mod(pset->p)) / (pset->p))[1]   ) + T)  / (pset->p))[1];
+    BigInt bottom2 = ((bottom * CC.first)  / (pset->p))[1];
+	BigInt Y = ((top * bottom2.inv_mod(pset->p))  / (pset->p))[1];
+
+	return point(X,Y, pset);
+}
+
+
 BigInt get_k(struct paramset *pset, int size){
 	vector<uint8_t> t(size);
 	BigInt zero = vector<uint8_t> {0x00};
@@ -38,6 +63,7 @@ void Handle_state(int argc, char** argv, map <string,string> &state){
 			flag++;
 		} else if(flag == 1){
 			state["data_file"] = tmp;
+			state["output_file"] = tmp + ".crt";
 			flag++;
 		} else if(flag == 2){
 			state["output_file"] = tmp;
@@ -96,6 +122,7 @@ void context::sign(uint8_t *sgn, BigInt &d, string sss){
 		do{
 			k = get_k(pset, d.size());
 			point CC = P * k;
+			CC = Edwards_to_Weierstrass(CC, pset);
 			r = (CC.first / pset->q)[1];
 		}while(r == (BigInt) vector<uint8_t> {0x00});
 
@@ -129,7 +156,7 @@ int main(int argc, char** argv){
 		map <string,string> state = { {"pset", "SetC"},
 									  {"private_key", ""},
 									  {"data_file", ""},
-									  {"output_file", "file.crt"}
+									  {"output_file", ""}
 									};
 
 		Handle_state(argc, argv, state);
